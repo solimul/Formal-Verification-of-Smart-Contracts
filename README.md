@@ -1,0 +1,1 @@
+A repository of formal verification experiments and proofs targeting the correctness, safety, and security of smart contracts. Using Z3 and SMT-based techniques, this project explores a range of verification goals including arithmetic safety (underflows/overflows), access control, invariant preservation, and contract-specific logic validation.
