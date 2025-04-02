@@ -1,22 +1,28 @@
 '''
-> **🧾 Problem Statement: Ensuring Safe Token Withdrawals by Preventing Arithmetic Underflow**
->
-> ```solidity
-> function withdraw(uint amount) public {
->     require(address(msg.sender).balance >= amount, "Not enough funds");
->     (bool sent, ) = msg.sender.call{value: amount}("");
->     msg.sender.balance = msg.sender.balance - amount;
->     require(sent, "Failed to send Ether");
-> }
-> ```
->
-> This implementation is problematic for two key reasons:
->
-> 1. **Incorrect Balance Modification:** The statement `msg.sender.balance = msg.sender.balance - amount;` is semantically invalid in Solidity, as the `balance` field is a read-only property managed by the Ethereum Virtual Machine (EVM). This line does not compile in practice.
->
-> 2. **Potential Arithmetic Underflow:** Assuming the intention is to maintain an internal balance ledger (e.g., `mapping(address => uint) balances;`), subtracting `amount` from a user's balance without a prior bounds check can result in an arithmetic underflow. In Solidity versions prior to 0.8.0, such underflows would silently wrap around, leading to critical security vulnerabilities. Even in Solidity 0.8.0 and beyond, where underflows trigger a runtime exception, verifying that this condition is unreachable under correct usage remains essential.
->
-> **Formal Verification Goal:** Prove that if the withdrawal function is guarded by a check ensuring that `balances[msg.sender] ≥ amount`, then the subsequent subtraction `balances[msg.sender] - amount` is safe and cannot cause an underflow.
+Problem Statement: Verifying Arithmetic Safety in Token Withdrawals
+
+Given the following function:
+
+    mapping(address => uint) public balances;
+
+    function withdraw(uint amount) public {
+        require(address(this).balance >= amount, "Not enough funds");
+        (bool sent, ) = msg.sender.call{value: amount}("");
+        balances[address(this)] = balances[address(this)] - amount;
+        require(sent, "Failed to send Ether");
+    }
+
+Verification Goal:
+
+Prove that the subtraction operation:
+
+    balances[address(this)] - amount
+
+does not cause an arithmetic underflow at runtime, assuming the function is invoked under the guard:
+
+    address(this).balance ≥ amount
+
+This requires showing that under this guard, the expression `balances[address(this)] - amount` evaluates safely within the valid range of unsigned 256-bit integers (i.e., without wrapping around or reverting due to underflow).
 ''' 
 
 from z3 import *
