@@ -45,7 +45,7 @@ contract MultiSigAdmin {
         bytes32 txHash = keccak256(abi.encode(newContract));
         require(approvals[txHash] >= REQUIRED_SIGNATURES, "Not enough approvals");
         // Critical upgrade logic goes here
-        critcal_update = true;
+        critcal_upgrade = true;
 
     }
 }
@@ -106,6 +106,9 @@ action1 = (updated_approvedBy [target][sender]==Not (approvedBy [target][sender]
 action2 =  (updated_approvals [target] == approvals [target] + 1) 
 
 s.add (Implies (And (require1, require2), And (action1, action2)))
+
+
+# upgradeContract modeling
 s.add (Implies (updated_approvals [target] < REQUIRED_SIGNATURES, updated_critical_upgrade==critical_upgrade))
 s.add (updated_approvals [target] >= REQUIRED_SIGNATURES, updated_critical_upgrade == Not (critical_upgrade))
 
